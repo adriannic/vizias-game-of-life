@@ -1,5 +1,5 @@
 use vizia::prelude::*;
-use vizia_test_view::GameOfLife;
+use vizias_game_of_life::GameOfLife;
 
 fn main() {
     Application::new(|cx| {
