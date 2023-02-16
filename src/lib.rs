@@ -41,27 +41,45 @@ impl GameOfLife {
         .build(cx, |cx| {
             VStack::new(cx, |cx| {
                 VStack::new(cx, |cx| {
-                    for _ in 0..TEST_VIEW_SIZE {
-                        Label::new(cx, "█ █ █ █ █ █ █ █ █ █")
-                            .background_color(Color::rgb(18, 18, 18));
-                    }
-                })
-                .border_width(Pixels(5.0))
-                .border_color(Color::rgb(127, 127, 127))
-                .child_space(Stretch(1.0))
-                .border_radius(Pixels(10.0));
+                    VStack::new(cx, |cx| {
+                        for _ in 0..TEST_VIEW_SIZE {
+                            HStack::new(cx, |cx| {
+                                for _ in 0..TEST_VIEW_SIZE {
+                                    Label::new(cx, "     ")
+                                        .background_color(Color::rgb(96, 96, 96))
+                                        .left(Pixels(1.5))
+                                        .right(Pixels(1.5))
+                                        .bottom(Pixels(1.5))
+                                        .top(Pixels(1.5))
+                                        .border_radius(Pixels(2.0));
+                                }
+                            });
+                        }
+                    })
+                    .child_space(Stretch(1.0))
+                    .border_radius(Pixels(5.0));
 
-                Button::new(
-                    cx,
-                    |cx| cx.emit(GameOfLifeEvent::ToggleGame),
-                    |cx| Label::new(cx, GameOfLife::state).color(Color::white()),
-                )
-                .background_color(Color::rgb(18, 18, 18))
-                .top(Pixels(10.0));
+                    Button::new(
+                        cx,
+                        |cx| cx.emit(GameOfLifeEvent::ToggleGame),
+                        |cx| Label::new(cx, GameOfLife::state).color(Color::white()),
+                    )
+                    .background_color(Color::rgb(127, 127, 127))
+                    .top(Pixels(10.0));
+                })
+                .background_color(Color::rgb(32, 32, 32))
+                .color(Color::white())
+                .child_space(Stretch(1.0))
+                .border_width(Pixels(5.0))
+                .border_radius(Pixels(10.0))
+                .space(Stretch(0.5));
             })
-            .background_color(Color::black())
+            .background_color(Color::rgb(18, 18, 18))
             .color(Color::white())
-            .child_space(Stretch(1.0));
+            .child_space(Stretch(1.0))
+            .border_width(Pixels(5.0))
+            .border_radius(Pixels(10.0))
+            .space(Auto);
         })
     }
 }
