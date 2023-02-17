@@ -2,8 +2,6 @@ use std::{thread, time::Duration};
 
 use vizia::prelude::*;
 
-const TEST_VIEW_SIZE: usize = 10;
-
 enum GameOfLifeEvent {
     ToggleGame,
     ToggleCell(usize, usize),
@@ -14,34 +12,37 @@ enum GameOfLifeEvent {
 pub struct GameOfLife {
     running: bool,
     board: Vec<usize>,
+    board_x: usize,
+    board_y: usize,
 }
 
 impl GameOfLife {
-    pub fn new(cx: &mut Context) -> Handle<Self> {
+    pub fn new(cx: &mut Context, board_x: usize, board_y: usize, delta_seconds: Duration) -> Handle<Self> {
         Self {
             running: false,
-            board: vec![0; TEST_VIEW_SIZE * TEST_VIEW_SIZE],
+            board: vec![0; board_x * board_y],
+            board_x,
+            board_y,
         }
-        .build(cx, |cx| {
-            cx.spawn(|cx| loop {
+        .build(cx, move |cx| {
+            cx.spawn(move |cx| loop {
                 cx.emit(GameOfLifeEvent::Step).unwrap();
-                thread::sleep(Duration::from_secs(1));
+                thread::sleep(delta_seconds);
             })
             .build(cx);
 
-            VStack::new(cx, |cx| {
-                VStack::new(cx, |cx| {
-                    VStack::new(cx, |cx| {
-                        Binding::new(cx, GameOfLife::board, |cx, board| {
-                            for x in 0..TEST_VIEW_SIZE {
-                                HStack::new(cx, |cx| {
-                                    for y in 0..TEST_VIEW_SIZE {
-                                        let color =
-                                            if board.get_val(cx)[y * TEST_VIEW_SIZE + x] == 1 {
-                                                Color::white()
-                                            } else {
-                                                Color::rgb(96, 96, 96)
-                                            };
+            VStack::new(cx, move |cx| {
+                VStack::new(cx, move |cx| {
+                    VStack::new(cx, move |cx| {
+                        Binding::new(cx, GameOfLife::board, move |cx, board| {
+                            for x in 0..board_x {
+                                HStack::new(cx, move |cx| {
+                                    for y in 0..board_y {
+                                        let color = if board.get_val(cx)[y * board_x + x] == 1 {
+                                            Color::white()
+                                        } else {
+                                            Color::rgb(96, 96, 96)
+                                        };
 
                                         Label::new(cx, "     ")
                                             .background_color(Color::rgb(96, 96, 96))
@@ -88,62 +89,91 @@ impl GameOfLife {
             .space(Auto);
         })
     }
+
+    pub fn start(&mut self) {
+        self.running = true;
+    }
+
+    pub fn stop(&mut self) {
+        self.running = false;
+    }
+
+    pub fn step(&mut self) {
+        if self.running {
+            let mut new_board = self.board.clone();
+            for (i, value) in self.board.iter().enumerate() {
+                let neighbors = self.get_neighbors(i);
+                let count: usize = neighbors.iter().map(|index| self.board[*index]).sum();
+                new_board[i] =
+                    if *value == 1 && (2..=3).contains(&count) || *value == 0 && count == 3 {
+                        1
+                    } else {
+                        0
+                    };
+            }
+            self.board = new_board;
+        }
+    }
+
+    pub fn toggle_cell(&mut self, x: usize, y: usize) -> bool {
+        if self.running {
+            return false;
+        };
+        self.board[y * self.board_x + x] = 1 - self.board[y * self.board_x + x];
+        true
+    }
+
+    pub fn set_cell(&mut self, x: usize, y: usize, value: bool) -> bool {
+        if self.running {
+            return false;
+        };
+        self.board[y * self.board_x + x] = value as usize;
+        true
+    }
+
+    pub fn get_neighbors(&self, i: usize) -> Vec<usize> {
+        let x = (i % self.board_x) as i32;
+        let y = (i / self.board_x) as i32;
+
+        const DIRECTIONS: [(i32, i32); 8] = [
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+        ];
+        DIRECTIONS
+            .iter()
+            .map(|(dir_x, dir_y)| {
+                let x = (x + dir_x).rem_euclid(self.board_x as i32) as usize;
+                let y = (y + dir_y).rem_euclid(self.board_y as i32) as usize;
+
+                y * self.board_x + x
+            })
+            .collect()
+    }
 }
 
 impl View for GameOfLife {
     #[allow(unused_variables)]
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|game_event, _| match game_event {
-            GameOfLifeEvent::Step => {
+            GameOfLifeEvent::Step => self.step(),
+            GameOfLifeEvent::ToggleGame => {
                 if self.running {
-                    let mut new_board = self.board.clone();
-                    for (i, value) in self.board.iter().enumerate() {
-                        let neighbors = get_neighbors(i, TEST_VIEW_SIZE);
-                        let count: usize = neighbors.iter().map(|index| self.board[*index]).sum();
-                        new_board[i] = if *value == 1 && (2..=3).contains(&count)
-                            || *value == 0 && count == 3
-                        {
-                            1
-                        } else {
-                            0
-                        };
-                    }
-                    self.board = new_board;
+                    self.stop()
+                } else {
+                    self.start()
                 }
             }
-            GameOfLifeEvent::ToggleGame => self.running ^= true,
             GameOfLifeEvent::ToggleCell(x, y) => {
-                if !self.running {
-                    self.board[y * TEST_VIEW_SIZE + x] = 1 - self.board[y * TEST_VIEW_SIZE + x];
-                }
+                self.toggle_cell(*x, *y);
             }
         });
     }
-}
-
-fn get_neighbors(i: usize, row_len: usize) -> Vec<usize> {
-    let x = (i % row_len) as i32;
-    let y = (i / row_len) as i32;
-
-    const DIRECTIONS: [(i32, i32); 8] = [
-        (-1, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, -1),
-        (0, 1),
-        (1, -1),
-        (1, 0),
-        (1, 1),
-    ];
-    DIRECTIONS
-        .iter()
-        .map(|(dir_x, dir_y)| {
-            let x = (x + dir_x).rem_euclid(row_len as i32) as usize;
-            let y = (y + dir_y).rem_euclid(row_len as i32) as usize;
-
-            y * row_len + x
-        })
-        .collect()
 }
 
 #[cfg(test)]
