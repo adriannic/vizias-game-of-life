@@ -8,6 +8,7 @@
 .tiles-wrapper {
   child-space: 8px;
   row-between: 4px;
+  space: 1s;
   height: auto;
   width: auto;
   border-radius: 8px;
@@ -25,6 +26,10 @@
   height: 20px;
   background-color: #888;
   border-radius: 2px;
+}
+
+.tile:hover {
+  background-color: #bbb;
 }
 
 .tile:checked {
