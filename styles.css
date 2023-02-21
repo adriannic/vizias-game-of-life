@@ -1,0 +1,39 @@
+:root {
+  background-color: #242424;
+  col-between: 0;
+  row-between: 0;
+  child-space: 1s;
+}
+
+.tiles-wrapper {
+  child-space: 8px;
+  row-between: 4px;
+  height: auto;
+  width: auto;
+  border-radius: 8px;
+
+  background-color: #323232;
+}
+
+.tile-row {
+  col-between: 4px;
+  width: auto;
+}
+
+.tile {
+  width: 20px;
+  height: 20px;
+  background-color: #888;
+  border-radius: 2px;
+}
+
+.tile:checked {
+  background-color: #fff;
+}
+
+.action-button {
+  background-color: #aaa;
+  top: 10px;
+  left: 1s;
+  right: 1s;
+}
