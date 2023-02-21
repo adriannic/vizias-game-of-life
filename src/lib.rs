@@ -81,12 +81,10 @@ impl GameOfLife {
             cx.spawn(move |cx| loop {
                 cx.emit(GameOfLifeEvent::Step).unwrap();
                 thread::sleep(delta_time);
-            })
-            .build(cx);
+            });
 
             VStack::new(cx, move |cx| {
-                Label::new(cx, "Vizia's Game of Life")
-                    .class("title");
+                Label::new(cx, "Vizia's Game of Life").class("title");
 
                 for x in 0..board_x {
                     HStack::new(cx, move |cx| {
