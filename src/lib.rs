@@ -27,17 +27,22 @@ impl View for GameOfLife {
     /// Handles events related to the game.
     #[allow(unused_variables)]
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
-        event.map(|game_event, _| match game_event {
-            GameOfLifeEvent::Step => self.step(),
+        event.map(|game_event, meta| match game_event {
+            GameOfLifeEvent::Step => {
+                self.step();
+                meta.consume();
+            }
             GameOfLifeEvent::ToggleGame => {
                 if self.running {
                     self.stop()
                 } else {
                     self.start()
                 }
+                meta.consume();
             }
             GameOfLifeEvent::ToggleCell(x, y) => {
                 self.toggle_cell(*x, *y);
+                meta.consume();
             }
         });
     }
@@ -80,6 +85,9 @@ impl GameOfLife {
             .build(cx);
 
             VStack::new(cx, move |cx| {
+                Label::new(cx, "Vizia's Game of Life")
+                    .class("title");
+
                 for x in 0..board_x {
                     HStack::new(cx, move |cx| {
                         for y in 0..board_y {

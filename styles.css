@@ -16,6 +16,13 @@
   background-color: #323232;
 }
 
+.title {
+  space: 1s;
+  font-size: 30.0;
+  font-weight: 600;
+  color: #bbb;
+}
+
 .tile-row {
   col-between: 4px;
   width: auto;
